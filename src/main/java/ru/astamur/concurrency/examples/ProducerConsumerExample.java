@@ -9,23 +9,23 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ProducerConsumerExample {
     public static void main(String[] args) throws InterruptedException {
-        Box box = new Box(5);
-        Thread producer1 = new Thread(new Producer("Producer #1", box, 1000));
-        Thread producer2 = new Thread(new Producer("Producer #2", box, 1000));
-        Thread consumer = new Thread(new Consumer("Consumer #1", box, 100));
+        MessageBox messageBox = new MessageBox(5);
+        Thread producer1 = new Thread(new Producer("Producer #1", messageBox, 1000));
+        Thread producer2 = new Thread(new Producer("Producer #2", messageBox, 1000));
+        Thread consumer = new Thread(new Consumer("Consumer #1", messageBox, 100));
 
         producer1.start();
         producer2.start();
         consumer.start();
     }
 
-    private static class Box {
-        private final static Logger log = LoggerFactory.getLogger(Box.class);
+    private static class MessageBox {
+        private final static Logger log = LoggerFactory.getLogger(MessageBox.class);
 
         private List<String> messages = new ArrayList<>();
         private int capacity;
 
-        Box(int capacity) {
+        MessageBox(int capacity) {
             this.capacity = capacity;
         }
 
@@ -60,13 +60,13 @@ public class ProducerConsumerExample {
         private final static Logger log = LoggerFactory.getLogger(Producer.class);
 
         private AtomicInteger counter = new AtomicInteger(0);
-        private Box box;
+        private MessageBox messageBox;
         private String name;
         private long delay;
 
-        Producer(String name, Box box, long delay) {
+        Producer(String name, MessageBox messageBox, long delay) {
             this.name = name;
-            this.box = box;
+            this.messageBox = messageBox;
             this.delay = delay;
         }
 
@@ -77,7 +77,7 @@ public class ProducerConsumerExample {
 
                     String message = String.format("message_%d", counter.incrementAndGet());
                     log.debug("{}: produced message '{}'", name, message);
-                    box.put(message);
+                    messageBox.put(message);
                 }
             } catch (InterruptedException e) {
                 log.error("Interruption. Stop producing", e);
@@ -89,12 +89,12 @@ public class ProducerConsumerExample {
         private final static Logger log = LoggerFactory.getLogger(Consumer.class);
 
         private String name;
-        private Box box;
+        private MessageBox messageBox;
         private long delay;
 
-        Consumer(String name, Box box, long delay) {
+        Consumer(String name, MessageBox messageBox, long delay) {
             this.name = name;
-            this.box = box;
+            this.messageBox = messageBox;
             this.delay = delay;
         }
 
@@ -102,7 +102,7 @@ public class ProducerConsumerExample {
             try {
                 while (true) {
                     Thread.sleep(delay);
-                    log.info("{}: '{}'", name, box.take());
+                    log.info("{}: '{}'", name, messageBox.take());
                 }
             } catch (InterruptedException e) {
                 log.error("Interruption. Stop consuming", e);
