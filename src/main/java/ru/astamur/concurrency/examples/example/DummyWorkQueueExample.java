@@ -1,4 +1,4 @@
-package ru.astamur.concurrency.examples;
+package ru.astamur.concurrency.examples.example;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,7 +6,7 @@ import ru.astamur.concurrency.examples.structure.DummyWorkQueue;
 
 import java.util.stream.IntStream;
 
-public class DummyWorkQueueClient {
+public class DummyWorkQueueExample {
     public static void main(String[] args) {
         DummyWorkQueue queue = new DummyWorkQueue(5);
 
