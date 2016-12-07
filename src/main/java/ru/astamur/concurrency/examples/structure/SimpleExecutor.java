@@ -88,20 +88,6 @@ public class SimpleExecutor {
         }
     }
 
-    private void startWork() {
-        synchronized (activeWorkersCounterLock) {
-            activeWorkersCounter++;
-            activeWorkersCounterLock.notify();
-        }
-    }
-
-    private void completeWork() {
-        synchronized (activeWorkersCounterLock) {
-            activeWorkersCounter--;
-            activeWorkersCounterLock.notify();
-        }
-    }
-
     /**
      * An internal executor's worker thread implementation.
      */
@@ -146,6 +132,21 @@ public class SimpleExecutor {
                 } finally {
                     completeWork();
                 }
+            }
+        }
+
+
+        private void startWork() {
+            synchronized (activeWorkersCounterLock) {
+                activeWorkersCounter++;
+                activeWorkersCounterLock.notify();
+            }
+        }
+
+        private void completeWork() {
+            synchronized (activeWorkersCounterLock) {
+                activeWorkersCounter--;
+                activeWorkersCounterLock.notify();
             }
         }
     }
