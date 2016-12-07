@@ -9,8 +9,8 @@ public class AtomicDouble extends Number {
         this(0.0);
     }
 
-    public AtomicDouble(double initVal) {
-        value = new AtomicReference<>(initVal);
+    public AtomicDouble(double initialValue) {
+        value = new AtomicReference<>(initialValue);
     }
 
     public double get() {
@@ -22,14 +22,14 @@ public class AtomicDouble extends Number {
     }
 
     public boolean compareAndSet(double expect, double update) {
-        Double origVal, newVal;
-        newVal = update;
+        Double originalValue, newValue;
+        newValue = update;
 
         while (true) {
-            origVal = value.get();
+            originalValue = value.get();
 
-            if (Double.compare(origVal, expect) == 0) {
-                if (value.compareAndSet(origVal, newVal))
+            if (Double.compare(originalValue, expect) == 0) {
+                if (value.compareAndSet(originalValue, newValue))
                     return true;
             } else {
                 return false;
@@ -37,43 +37,39 @@ public class AtomicDouble extends Number {
         }
     }
 
-    public boolean weakCompareAndSet(double expect, double update) {
-        return compareAndSet(expect, update);
-    }
-
     public double getAndSet(double setVal) {
-        Double origVal, newVal;
-        newVal = setVal;
+        Double originalValue, newValue;
+        newValue = setVal;
 
         while (true) {
-            origVal = value.get();
+            originalValue = value.get();
 
-            if (value.compareAndSet(origVal, newVal))
-                return origVal;
+            if (value.compareAndSet(originalValue, newValue))
+                return originalValue;
         }
     }
 
     public double getAndAdd(double delta) {
-        Double origVal, newVal;
+        Double originalValue, newValue;
 
         while (true) {
-            origVal = value.get();
-            newVal = origVal + delta;
+            originalValue = value.get();
+            newValue = originalValue + delta;
 
-            if (value.compareAndSet(origVal, newVal))
-                return origVal;
+            if (value.compareAndSet(originalValue, newValue))
+                return originalValue;
         }
     }
 
     public double addAndGet(double delta) {
-        Double origVal, newVal;
+        Double originalValue, newValue;
 
         while (true) {
-            origVal = value.get();
-            newVal = origVal + delta;
+            originalValue = value.get();
+            newValue = originalValue + delta;
 
-            if (value.compareAndSet(origVal, newVal))
-                return newVal;
+            if (value.compareAndSet(originalValue, newValue))
+                return newValue;
         }
     }
 
@@ -94,26 +90,26 @@ public class AtomicDouble extends Number {
     }
 
     public double getAndMultiply(double multiple) {
-        Double origVal, newVal;
+        Double originalValue, newValue;
 
         while (true) {
-            origVal = value.get();
-            newVal = origVal * multiple;
+            originalValue = value.get();
+            newValue = originalValue * multiple;
 
-            if (value.compareAndSet(origVal, newVal))
-                return origVal;
+            if (value.compareAndSet(originalValue, newValue))
+                return originalValue;
         }
     }
 
     public double multiplyAndGet(double multiple) {
-        Double origVal, newVal;
+        Double originalValue, newValue;
 
         while (true) {
-            origVal = value.get();
-            newVal = origVal * multiple;
+            originalValue = value.get();
+            newValue = originalValue * multiple;
 
-            if (value.compareAndSet(origVal, newVal))
-                return newVal;
+            if (value.compareAndSet(originalValue, newValue))
+                return newValue;
         }
     }
 
