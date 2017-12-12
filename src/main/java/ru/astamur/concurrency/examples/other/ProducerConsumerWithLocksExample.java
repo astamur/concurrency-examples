@@ -1,4 +1,4 @@
-package ru.astamur.concurrency.examples.example;
+package ru.astamur.concurrency.examples.other;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +58,7 @@ public class ProducerConsumerWithLocksExample {
         void put(String message) {
             try {
                 lock.lock();
-                while (messages.size() > capacity) {
+                while (messages.size() == capacity) {
                     log.debug("No place to put. Wait");
                     try {
                         condition.await();

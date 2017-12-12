@@ -1,7 +1,6 @@
-package ru.astamur.concurrency.examples.example;
+package ru.astamur.concurrency.examples.other;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,19 +8,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ProducerConsumerExample {
     public static void main(String[] args) throws InterruptedException {
-        MessageBox messageBox = new MessageBox(5);
+        MessageBox messageBox = new MessageBox(1);
         Thread producer1 = new Thread(new Producer("Producer #1", messageBox, 1000));
         Thread producer2 = new Thread(new Producer("Producer #2", messageBox, 1000));
-        Thread consumer = new Thread(new Consumer("Consumer #1", messageBox, 100));
+        Thread producer3 = new Thread(new Producer("Producer #3", messageBox, 1000));
+        Thread consumer = new Thread(new Consumer("Consumer #1", messageBox, 2000));
 
         producer1.start();
         producer2.start();
+        producer3.start();
         consumer.start();
     }
 
+    @Slf4j
     private static class MessageBox {
-        private final static Logger log = LoggerFactory.getLogger(MessageBox.class);
-
         private List<String> messages = new ArrayList<>();
         private int capacity;
 
@@ -36,6 +36,7 @@ public class ProducerConsumerExample {
                     wait();
                 } catch (InterruptedException e) {
                     log.error("Interruption. Someone doesn't want to wait", e);
+                    Thread.currentThread().interrupt();
                 }
             }
             notifyAll();
@@ -43,23 +44,26 @@ public class ProducerConsumerExample {
         }
 
         synchronized void put(String message) {
-            while (messages.size() > capacity) {
+            while (messages.size() == capacity) {
                 log.debug("No place to put. Wait");
                 try {
                     wait();
                 } catch (InterruptedException e) {
                     log.error("Interruption. Someone doesn't want to wait", e);
+                    Thread.currentThread().interrupt();
                 }
             }
             messages.add(message);
+
+            log.debug("MessageBox: received message: '{}' ,size: {}", message, messages.size());
+
             notifyAll();
         }
     }
 
+    @Slf4j
     private static class Producer implements Runnable {
-        private final static Logger log = LoggerFactory.getLogger(Producer.class);
-
-        private AtomicInteger counter = new AtomicInteger(0);
+        private static final AtomicInteger counter = new AtomicInteger(0);
         private MessageBox messageBox;
         private String name;
         private long delay;
@@ -76,18 +80,20 @@ public class ProducerConsumerExample {
                     Thread.sleep(delay);
 
                     String message = String.format("message_%d", counter.incrementAndGet());
+
                     log.debug("{}: produced message '{}'", name, message);
+
                     messageBox.put(message);
                 }
             } catch (InterruptedException e) {
                 log.error("Interruption. Stop producing", e);
+                Thread.currentThread().interrupt();
             }
         }
     }
 
+    @Slf4j
     private static class Consumer implements Runnable {
-        private final static Logger log = LoggerFactory.getLogger(Consumer.class);
-
         private String name;
         private MessageBox messageBox;
         private long delay;
@@ -106,6 +112,7 @@ public class ProducerConsumerExample {
                 }
             } catch (InterruptedException e) {
                 log.error("Interruption. Stop consuming", e);
+                Thread.currentThread().interrupt();
             }
         }
     }
