@@ -8,7 +8,6 @@ import java.util.concurrent.TimeoutException;
 public class SimpleBlockingQueue<T> {
     private final List<T> list;
     private final int capacity;
-    private int size;
 
     public SimpleBlockingQueue(int capacity) {
         list = new LinkedList<>();
@@ -20,14 +19,12 @@ public class SimpleBlockingQueue<T> {
             long timeoutInMillis = timeUnit.toMillis(timeout);
             long start = System.currentTimeMillis();
 
-            while (size == capacity) {
+            while (list.size() == capacity) {
                 list.wait(timeoutInMillis);
                 checkTimeout(start, timeoutInMillis);
             }
 
             list.add(value);
-            size++;
-
             list.notify();
         }
     }
@@ -37,12 +34,11 @@ public class SimpleBlockingQueue<T> {
             long timeoutInMillis = timeUnit.toMillis(timeout);
             long start = System.currentTimeMillis();
 
-            while (size == 0) {
+            while (list.isEmpty()) {
                 list.wait();
                 checkTimeout(start, timeoutInMillis);
             }
 
-            size--;
             list.notify();
 
             return list.remove(0);

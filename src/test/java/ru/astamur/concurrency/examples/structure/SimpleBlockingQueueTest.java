@@ -24,7 +24,7 @@ public class SimpleBlockingQueueTest {
         }
 
         try {
-            blockingQueue.offer("block", 3, TimeUnit.SECONDS);
+            blockingQueue.offer("block", 1, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             log.error("Failed", e);
             fail("Should not be interrupted here");
@@ -34,23 +34,28 @@ public class SimpleBlockingQueueTest {
     }
 
     @Test
-    public void shouldProcessAllRequests() {
-        SimpleBlockingQueue<Integer> blockingQueue = new SimpleBlockingQueue<>(100);
+    public void shouldProcessAllRequests() throws InterruptedException {
+        SimpleBlockingQueue<Integer> blockingQueue = new SimpleBlockingQueue<>(5);
         List<Exception> exceptions = new CopyOnWriteArrayList<>();
 
-        ExecutorService executor = Executors.newCachedThreadPool();
+        ExecutorService executor = Executors.newFixedThreadPool(10);
 
-        IntStream.range(0, 1000).forEach(i -> {
-            executor.execute(() -> {
-                try {
-                    blockingQueue.offer(i, 10, TimeUnit.SECONDS);
-                    TimeUnit.MILLISECONDS.sleep(1);
-                    blockingQueue.poll(10, TimeUnit.SECONDS);
-                } catch (InterruptedException | TimeoutException e) {
-                    exceptions.add(e);
-                }
-            });
-        });
+        IntStream.range(0, 10_000).forEach(i -> executor.execute(() -> {
+            try {
+                blockingQueue.offer(i, 10, TimeUnit.SECONDS);
+                TimeUnit.MILLISECONDS.sleep(1);
+                blockingQueue.poll(10, TimeUnit.SECONDS);
+            } catch (InterruptedException | TimeoutException e) {
+                exceptions.add(e);
+            }
+        }));
+
+        executor.shutdown();
+
+        if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+            fail("Waiting too long");
+        }
+
 
         assertEquals(0, exceptions.size());
     }
