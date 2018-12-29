@@ -1,0 +1,32 @@
+buildscript {
+    ext {
+        versions = [
+                'commons_lang3': '3.5',
+                'lombok'       : '1.18.4',
+
+                slf4j          : '1.7.25',
+                logback        : '1.2.3',
+
+                'junit'        : '5.3.2',
+                'assertj'      : '3.11.1'
+        ]
+    }
+}
+
+group 'com.codessay.concurrency'
+version '0.0.1'
+
+subprojects {
+    group = "$parent.group"
+    version = "$parent.version"
+
+    repositories {
+        mavenCentral()
+    }
+
+    apply plugin: 'idea'
+    apply plugin: 'java'
+
+    sourceCompatibility = 1.11
+    targetCompatibility = 1.11
+}
