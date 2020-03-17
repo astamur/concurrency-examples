@@ -1,6 +1,6 @@
-package com.codessay.concurrency.primitives;
+package dev.astamur.concurrency.primitives;
 
-import com.codessay.concurrency.primitives.structure.AtomicDouble;
+import dev.astamur.concurrency.primitives.structure.AtomicDouble;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

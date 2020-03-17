@@ -1,4 +1,4 @@
-package com.codessay.concurrency.primitives.structure;
+package dev.astamur.concurrency.primitives.structure;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -27,7 +27,7 @@ public class SimpleBlockingQueueWithLock<T> {
         try {
             while (list.size() == capacity) {
                 if (!notFull.await(timeout, timeUnit)) {
-                    throw new TimeoutException("Timeout has been expired");
+                    throw new TimeoutException("Timeout has expired");
                 }
             }
 

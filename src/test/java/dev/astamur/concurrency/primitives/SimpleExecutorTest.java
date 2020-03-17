@@ -1,6 +1,6 @@
-package com.codessay.concurrency.primitives;
+package dev.astamur.concurrency.primitives;
 
-import com.codessay.concurrency.primitives.structure.SimpleExecutor;
+import dev.astamur.concurrency.primitives.structure.SimpleExecutor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +15,7 @@ public class SimpleExecutorTest {
     private static final int EXECUTIONS_COUNT = 1000;
 
     @Test
-    public void testWorkUntilShutdown() throws InterruptedException {
+    public void testWorkUntilShutdown() {
         SimpleExecutor executor = new SimpleExecutor(THREADS_COUNT);
         AtomicInteger counter = new AtomicInteger();
 
@@ -29,7 +29,7 @@ public class SimpleExecutorTest {
     }
 
     @Test
-    public void testInterruptWhenShutdownNow() throws InterruptedException {
+    public void testInterruptWhenShutdownNow() {
         SimpleExecutor executor = new SimpleExecutor(THREADS_COUNT);
         AtomicInteger counter = new AtomicInteger();
 

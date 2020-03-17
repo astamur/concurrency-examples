@@ -1,4 +1,4 @@
-package com.codessay.concurrency.primitives.structure;
+package dev.astamur.concurrency.primitives.structure;
 
 import java.util.concurrent.atomic.AtomicReference;
 

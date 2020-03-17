@@ -1,4 +1,4 @@
-package com.codessay.concurrency.primitives.other;
+package dev.astamur.concurrency.primitives.other;
 
 import lombok.extern.slf4j.Slf4j;
 

@@ -1,4 +1,4 @@
-package com.codessay.concurrency.primitives.other;
+package dev.astamur.concurrency.primitives.other;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

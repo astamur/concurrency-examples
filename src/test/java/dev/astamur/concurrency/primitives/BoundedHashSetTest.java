@@ -1,6 +1,6 @@
-package com.codessay.concurrency.primitives;
+package dev.astamur.concurrency.primitives;
 
-import com.codessay.concurrency.primitives.structure.BoundedHashSet;
+import dev.astamur.concurrency.primitives.structure.BoundedHashSet;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.ExecutorService;

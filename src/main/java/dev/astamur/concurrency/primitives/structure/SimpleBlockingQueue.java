@@ -1,4 +1,4 @@
-package com.codessay.concurrency.primitives.structure;
+package dev.astamur.concurrency.primitives.structure;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -47,7 +47,7 @@ public class SimpleBlockingQueue<T> {
 
     private void checkTimeout(long start, long timeout) throws TimeoutException {
         if (System.currentTimeMillis() - start >= timeout) {
-            throw new TimeoutException("Timeout has been expired");
+            throw new TimeoutException("Timeout has expired");
         }
     }
 }

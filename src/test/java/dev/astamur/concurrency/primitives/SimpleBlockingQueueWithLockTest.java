@@ -1,6 +1,6 @@
-package com.codessay.concurrency.primitives;
+package dev.astamur.concurrency.primitives;
 
-import com.codessay.concurrency.primitives.structure.SimpleBlockingQueueWithLock;
+import dev.astamur.concurrency.primitives.structure.SimpleBlockingQueueWithLock;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 

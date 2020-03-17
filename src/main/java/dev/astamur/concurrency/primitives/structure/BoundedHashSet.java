@@ -1,4 +1,4 @@
-package com.codessay.concurrency.primitives.structure;
+package dev.astamur.concurrency.primitives.structure;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -10,7 +10,7 @@ public class BoundedHashSet<T> {
     private final Semaphore semaphore;
 
     public BoundedHashSet(int bound) {
-        set = Collections.synchronizedSet(new HashSet<T>());
+        set = Collections.synchronizedSet(new HashSet<>());
         semaphore = new Semaphore(bound);
     }
 
