@@ -1,13 +1,13 @@
 package dev.astamur.concurrency.primitives.other;
 
 import java.util.Arrays;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.stream.IntStream;
 
 public class PingPongWithQueue {
-    private final BlockingQueue<String> pings = new LinkedBlockingQueue<>();
-    private final BlockingQueue<String> pongs = new LinkedBlockingQueue<>();
+    private final Queue<String> pings = new LinkedList<>();
+    private final Queue<String> pongs = new LinkedList<>();
     private volatile boolean state = true;
 
     public synchronized void ping() {
@@ -18,7 +18,7 @@ public class PingPongWithQueue {
                 wait();
             }
 
-            System.out.println(pongs.take() + " - " + Thread.currentThread().getName());
+            System.out.println(pongs.poll() + " - " + Thread.currentThread().getName());
             state = false;
             notify();
         } catch (InterruptedException e) {
@@ -35,7 +35,7 @@ public class PingPongWithQueue {
                 wait();
             }
 
-            System.out.println(pings.take() + " - " + Thread.currentThread().getName());
+            System.out.println(pings.poll() + " - " + Thread.currentThread().getName());
             state = true;
             notify();
         } catch (InterruptedException e) {
