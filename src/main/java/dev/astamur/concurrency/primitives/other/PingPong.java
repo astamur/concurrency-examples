@@ -9,7 +9,7 @@ public class PingPong {
     public synchronized void ping() {
         try {
             while (!state) {
-                wait();
+                wait(1);
             }
 
             System.out.println("Ping - " + Thread.currentThread().getName());
@@ -24,7 +24,7 @@ public class PingPong {
     public synchronized void pong() {
         try {
             while (state) {
-                wait();
+                wait(1);
             }
 
             System.out.println("Pong - " + Thread.currentThread().getName());
@@ -58,7 +58,7 @@ public class PingPong {
             pongers[i].start();
         });
 
-        Thread.sleep(100);
+        Thread.sleep(1000);
 
         Arrays.stream(pingers).forEach(Thread::interrupt);
         Arrays.stream(pongers).forEach(Thread::interrupt);
