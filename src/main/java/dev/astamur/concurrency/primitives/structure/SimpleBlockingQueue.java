@@ -16,38 +16,38 @@ public class SimpleBlockingQueue<T> {
 
     public void offer(T value, long timeout, TimeUnit timeUnit) throws InterruptedException, TimeoutException {
         synchronized (list) {
-            long timeoutInMillis = timeUnit.toMillis(timeout);
-            long start = System.currentTimeMillis();
+            long deadline = System.currentTimeMillis() + timeUnit.toMillis(timeout);
 
             while (list.size() == capacity) {
-                list.wait(timeoutInMillis);
-                checkTimeout(start, timeoutInMillis);
+                long remaining = deadline - System.currentTimeMillis();
+                if (remaining <= 0) {
+                    throw new TimeoutException("Timeout has expired");
+                }
+                list.wait(remaining);
             }
 
             list.add(value);
-            list.notify();
+            // Producers and consumers wait on the same monitor, so notifyAll() is required:
+            // notify() could wake another producer and leave the waiting consumer asleep.
+            list.notifyAll();
         }
     }
 
     public T poll(long timeout, TimeUnit timeUnit) throws InterruptedException, TimeoutException {
         synchronized (list) {
-            long timeoutInMillis = timeUnit.toMillis(timeout);
-            long start = System.currentTimeMillis();
+            long deadline = System.currentTimeMillis() + timeUnit.toMillis(timeout);
 
             while (list.isEmpty()) {
-                list.wait();
-                checkTimeout(start, timeoutInMillis);
+                long remaining = deadline - System.currentTimeMillis();
+                if (remaining <= 0) {
+                    throw new TimeoutException("Timeout has expired");
+                }
+                list.wait(remaining);
             }
 
-            list.notify();
-
-            return list.remove(0);
-        }
-    }
-
-    private void checkTimeout(long start, long timeout) throws TimeoutException {
-        if (System.currentTimeMillis() - start >= timeout) {
-            throw new TimeoutException("Timeout has expired");
+            T value = list.remove(0);
+            list.notifyAll();
+            return value;
         }
     }
 }

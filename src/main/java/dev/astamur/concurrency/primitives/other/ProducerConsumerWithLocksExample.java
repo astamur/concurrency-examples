@@ -28,46 +28,45 @@ public class ProducerConsumerWithLocksExample {
     private static class MessageBox {
         private final static Logger log = LoggerFactory.getLogger(MessageBox.class);
 
-        private List<String> messages = new ArrayList<>();
-        private int capacity;
+        private final List<String> messages = new ArrayList<>();
+        private final int capacity;
         private final Lock lock = new ReentrantLock();
+        // One condition shared by producers and consumers. The original bug was signal(), which wakes
+        // a single arbitrary waiter and could wake the wrong party (e.g. a producer waking another
+        // producer), losing the wakeup. signalAll() wakes everyone; each thread re-tests its own
+        // predicate in the surrounding while-loop, so only an eligible thread proceeds.
         private final Condition condition = lock.newCondition();
 
         MessageBox(int capacity) {
             this.capacity = capacity;
         }
 
-        String take() {
+        String take() throws InterruptedException {
+            lock.lock();
             try {
-                lock.lock();
                 while (messages.isEmpty()) {
-                    try {
-                        log.debug("Nothing to consume. Wait");
-                        condition.await();
-                    } catch (InterruptedException e) {
-                        log.error("Interruption. Someone doesn't want to wait", e);
-                    }
+                    log.debug("Nothing to consume. Wait");
+                    condition.await();
                 }
-                condition.signal();
-                return messages.remove(0);
+
+                String message = messages.remove(0);
+                condition.signalAll();
+                return message;
             } finally {
                 lock.unlock();
             }
         }
 
-        void put(String message) {
+        void put(String message) throws InterruptedException {
+            lock.lock();
             try {
-                lock.lock();
                 while (messages.size() == capacity) {
                     log.debug("No place to put. Wait");
-                    try {
-                        condition.await();
-                    } catch (InterruptedException e) {
-                        log.error("Interruption. Someone doesn't want to wait", e);
-                    }
+                    condition.await();
                 }
+
                 messages.add(message);
-                condition.signal();
+                condition.signalAll();
             } finally {
                 lock.unlock();
             }
@@ -77,9 +76,11 @@ public class ProducerConsumerWithLocksExample {
     private static class Producer implements Runnable {
         private final static Logger log = LoggerFactory.getLogger(Producer.class);
 
-        private AtomicInteger counter = new AtomicInteger(0);
-        private MessageBox messageBox;
-        private String name;
+        // Shared across all producers so message ids are unique instead of each producer restarting from 0.
+        private static final AtomicInteger counter = new AtomicInteger(0);
+
+        private final MessageBox messageBox;
+        private final String name;
 
         Producer(String name, MessageBox messageBox) {
             this.name = name;
@@ -97,6 +98,7 @@ public class ProducerConsumerWithLocksExample {
                 }
             } catch (InterruptedException e) {
                 log.error("Interruption. Stop producing", e);
+                Thread.currentThread().interrupt();
             }
         }
     }
@@ -104,8 +106,8 @@ public class ProducerConsumerWithLocksExample {
     private static class Consumer implements Runnable {
         private final static Logger log = LoggerFactory.getLogger(Consumer.class);
 
-        private String name;
-        private MessageBox messageBox;
+        private final String name;
+        private final MessageBox messageBox;
 
         Consumer(String name, MessageBox messageBox) {
             this.name = name;
@@ -120,6 +122,7 @@ public class ProducerConsumerWithLocksExample {
                 }
             } catch (InterruptedException e) {
                 log.error("Interruption. Stop consuming", e);
+                Thread.currentThread().interrupt();
             }
         }
     }

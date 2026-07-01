@@ -1,74 +1,61 @@
 package dev.astamur.concurrency.primitives.other;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.stream.IntStream;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 
+/**
+ * Ping-pong where the coordination lives entirely in the queues — there is no {@code synchronized}
+ * block, no {@code wait}/{@code notify}, and no shared boolean "turn" flag.
+ *
+ * <p>Two {@link SynchronousQueue}s act as direct hand-off channels (a {@code put} blocks until a
+ * matching {@code take}). The pinger sends the ball on {@code pings} and waits for it to come back on
+ * {@code pongs}; the ponger does the mirror. The blocking rendezvous of the queues is what enforces
+ * the strict alternation — remove either queue and the example no longer works.
+ */
 public class PingPongWithQueue {
-    private final Queue<String> pings = new LinkedList<>();
-    private final Queue<String> pongs = new LinkedList<>();
-    private volatile boolean state = true;
+    private static final Object BALL = new Object();
 
-    public synchronized void ping() {
-        try {
-            pings.offer("Ping");
+    private final BlockingQueue<Object> pings = new SynchronousQueue<>(); // ball on its way to the ponger
+    private final BlockingQueue<Object> pongs = new SynchronousQueue<>(); // ball on its way back to the pinger
 
-            while (!state) {
-                wait();
-            }
-
-            System.out.println(pongs.poll() + " - " + Thread.currentThread().getName());
-            state = false;
-            notify();
-        } catch (InterruptedException e) {
-            System.out.println(Thread.currentThread().getName() + " was interrupted");
-            Thread.currentThread().interrupt();
-        }
+    public void ping() throws InterruptedException {
+        System.out.println("Ping - " + Thread.currentThread().getName());
+        pings.put(BALL);   // hand the ball to a ponger (blocks until it is taken)
+        pongs.take();      // wait for the ball to return
     }
 
-    public synchronized void pong() {
-        try {
-            pings.offer("Pong");
-
-            while (state) {
-                wait();
-            }
-
-            System.out.println(pings.poll() + " - " + Thread.currentThread().getName());
-            state = true;
-            notify();
-        } catch (InterruptedException e) {
-            System.out.println(Thread.currentThread().getName() + " was interrupted");
-            Thread.currentThread().interrupt();
-        }
+    public void pong() throws InterruptedException {
+        pings.take();      // wait for a ball to answer
+        System.out.println("Pong - " + Thread.currentThread().getName());
+        pongs.put(BALL);   // hand the ball back (blocks until it is taken)
     }
 
     public static void main(String[] args) throws InterruptedException {
-        PingPong pingPong = new PingPong();
-        Thread[] pingers = new Thread[10];
-        Thread[] pongers = new Thread[10];
+        PingPongWithQueue pingPong = new PingPongWithQueue();
 
-        IntStream.range(0, 10).forEach(i -> {
-            pingers[i] = new Thread(() -> {
-                while (!Thread.currentThread().isInterrupted()) {
-                    pingPong.ping();
-                }
-            });
+        Thread pinger = new Thread(() -> loopUntilInterrupted(pingPong::ping), "pinger");
+        Thread ponger = new Thread(() -> loopUntilInterrupted(pingPong::pong), "ponger");
 
-            pongers[i] = new Thread(() -> {
-                while (!Thread.currentThread().isInterrupted()) {
-                    pingPong.pong();
-                }
-            });
-
-            pingers[i].start();
-            pongers[i].start();
-        });
+        pinger.start();
+        ponger.start();
 
         Thread.sleep(100);
 
-        Arrays.stream(pingers).forEach(Thread::interrupt);
-        Arrays.stream(pongers).forEach(Thread::interrupt);
+        pinger.interrupt();
+        ponger.interrupt();
+    }
+
+    private interface InterruptibleAction {
+        void run() throws InterruptedException;
+    }
+
+    private static void loopUntilInterrupted(InterruptibleAction action) {
+        try {
+            while (!Thread.currentThread().isInterrupted()) {
+                action.run();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

@@ -25,7 +25,6 @@ public class HolderExampleWithLocks {
     }
 
     private static class Holder {
-        //        volatile boolean ready;
         private final Lock lock = new ReentrantLock();
         private final Condition read = lock.newCondition();
         private final Condition written = lock.newCondition();
@@ -34,9 +33,8 @@ public class HolderExampleWithLocks {
 
         void write() {
             for (var i = 0; i < 10; i++) {
+                lock.lock();
                 try {
-                    lock.lock();
-
                     while (isWritten) {
                         read.await();
                     }
@@ -48,18 +46,17 @@ public class HolderExampleWithLocks {
                     written.signal();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
+                    return;
                 } finally {
                     lock.unlock();
                 }
             }
-
         }
 
         void read() {
             for (var i = 0; i < 100; i++) {
+                lock.lock();
                 try {
-                    lock.lock();
-
                     while (!isWritten) {
                         written.await();
                     }
@@ -70,44 +67,11 @@ public class HolderExampleWithLocks {
                     read.signal();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
+                    return;
                 } finally {
                     lock.unlock();
                 }
             }
         }
-
-//        synchronized void write() {
-//            try {
-//                for (var i = 0; i < 10; i++) {
-//                    while (ready) {
-//                        System.out.printf("Writer. Thread: %s. Counter: %d. State: %s\n", Thread.currentThread().getName(), val, "BEFORE_WAIT");
-//                        wait();
-//                    }
-//
-//                    val++;
-//                    ready = true;
-//                    notifyAll();
-//                    System.out.printf("Writer. Thread: %s. Counter: %d. State: %s\n", Thread.currentThread().getName(), val, "AFTER_WAIT");
-//                }
-//            } catch (InterruptedException e) {
-//                Thread.currentThread().interrupt();
-//            }
-//        }
-//
-//        synchronized void read() {
-//            for (var i = 0; i < 100; i++) {
-//                while (!ready) {
-//                    try {
-//                        System.out.printf("Reader. Thread: %s. Counter: %d. State: %s\n", Thread.currentThread().getName(), val, "BEFORE_WAIT");
-//                        wait();
-//                    } catch (InterruptedException e) {
-//                        Thread.currentThread().interrupt();
-//                    }
-//                }
-//                System.out.printf("Reader. Thread: %s. Counter: %d. State: %s\n", Thread.currentThread().getName(), val, "AFTER_WAIT");
-//                ready = false;
-//                notifyAll();
-//            }
-//        }
     }
 }

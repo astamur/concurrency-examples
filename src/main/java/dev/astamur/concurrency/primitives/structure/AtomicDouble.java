@@ -2,8 +2,17 @@ package dev.astamur.concurrency.primitives.structure;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * A {@code double} that may be updated atomically.
+ *
+ * <p>Intentionally built on top of {@link AtomicReference} to demonstrate the general technique of
+ * turning <em>any</em> value type into an atomic, lock-free structure: read the current reference,
+ * compute the new value, and {@code compareAndSet} in a retry loop. (A production {@code double}
+ * would avoid the {@code Double} boxing by packing the value into an {@code AtomicLong}, but that
+ * trick is specific to primitives and hides the pattern this example is meant to show.)
+ */
 public class AtomicDouble extends Number {
-    private AtomicReference<Double> value;
+    private final AtomicReference<Double> value;
 
     public AtomicDouble() {
         this(0.0);

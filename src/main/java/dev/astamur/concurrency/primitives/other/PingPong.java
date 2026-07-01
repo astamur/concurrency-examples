@@ -9,12 +9,12 @@ public class PingPong {
     public synchronized void ping() {
         try {
             while (!state) {
-                wait(1);
+                wait();
             }
 
             System.out.println("Ping - " + Thread.currentThread().getName());
             state = false;
-            notify();
+            notifyAll();
         } catch (InterruptedException e) {
             System.out.println(Thread.currentThread().getName() + " was interrupted");
             Thread.currentThread().interrupt();
@@ -24,12 +24,12 @@ public class PingPong {
     public synchronized void pong() {
         try {
             while (state) {
-                wait(1);
+                wait();
             }
 
             System.out.println("Pong - " + Thread.currentThread().getName());
             state = true;
-            notify();
+            notifyAll();
         } catch (InterruptedException e) {
             System.out.println(Thread.currentThread().getName() + " was interrupted");
             Thread.currentThread().interrupt();

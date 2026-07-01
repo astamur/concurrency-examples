@@ -22,8 +22,8 @@ public class ProducerConsumerExample {
 
     @Slf4j
     private static class MessageBox {
-        private List<String> messages = new ArrayList<>();
-        private int capacity;
+        private final List<String> messages = new ArrayList<>();
+        private final int capacity;
 
         MessageBox(int capacity) {
             this.capacity = capacity;
@@ -64,9 +64,9 @@ public class ProducerConsumerExample {
     @Slf4j
     private static class Producer implements Runnable {
         private static final AtomicInteger counter = new AtomicInteger(0);
-        private MessageBox messageBox;
-        private String name;
-        private long delay;
+        private final MessageBox messageBox;
+        private final String name;
+        private final long delay;
 
         Producer(String name, MessageBox messageBox, long delay) {
             this.name = name;
@@ -94,9 +94,9 @@ public class ProducerConsumerExample {
 
     @Slf4j
     private static class Consumer implements Runnable {
-        private String name;
-        private MessageBox messageBox;
-        private long delay;
+        private final String name;
+        private final MessageBox messageBox;
+        private final long delay;
 
         Consumer(String name, MessageBox messageBox, long delay) {
             this.name = name;

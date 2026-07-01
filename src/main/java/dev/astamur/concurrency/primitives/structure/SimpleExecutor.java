@@ -10,7 +10,9 @@ public class SimpleExecutor {
 
     private final Worker[] threads;
     private final LinkedList<Runnable> queue = new LinkedList<>();
-    private final Object activeWorkersCounterLock = new Object();
+
+    // Number of tasks currently being executed (already removed from the queue but not yet finished).
+    // Guarded by the {@code queue} monitor so it can be checked together with the queue's emptiness.
     private int activeWorkersCounter;
 
     private volatile boolean shutdownFlag;
@@ -28,12 +30,12 @@ public class SimpleExecutor {
 
     public void execute(Runnable r) {
         if (shutdownFlag) {
-            throw new RuntimeException("Executor is going to shutdown. New tasks are not accepted");
+            throw new IllegalStateException("Executor is going to shutdown. New tasks are not accepted");
         }
 
         synchronized (queue) {
             queue.addLast(r);
-            queue.notify();
+            queue.notifyAll();
         }
     }
 
@@ -43,6 +45,12 @@ public class SimpleExecutor {
      */
     public void shutdown() {
         shutdownFlag = true;
+
+        // Wake up idle workers so they can observe the shutdown flag and terminate,
+        // and wake up anyone blocked in awaitTermination().
+        synchronized (queue) {
+            queue.notifyAll();
+        }
     }
 
     /**
@@ -73,17 +81,15 @@ public class SimpleExecutor {
 
         synchronized (queue) {
             try {
-                while (!queue.isEmpty()) {
+                // Termination is complete only when there is nothing left to run
+                // AND nothing currently running. Both are read under the same lock,
+                // which closes the "dequeued but not yet counted" race.
+                while (!queue.isEmpty() || activeWorkersCounter != 0) {
                     queue.wait();
-                }
-
-                synchronized (activeWorkersCounterLock) {
-                    while (activeWorkersCounter != 0) {
-                        activeWorkersCounterLock.wait();
-                    }
                 }
             } catch (InterruptedException e) {
                 log.info("Oops! An interruption! I am not awaiting anymore!", e);
+                Thread.currentThread().interrupt();
             }
         }
     }
@@ -93,25 +99,19 @@ public class SimpleExecutor {
      */
     private class Worker extends Thread {
         public void run() {
-            Runnable task;
-
             while (true) {
-                // Has this thread been interrupted
-                if (this.isInterrupted()) {
-                    log.info("'{}': bye bye!", this.getName());
-                    return;
-                }
+                Runnable task;
 
                 synchronized (queue) {
                     while (queue.isEmpty()) {
-                        try {
-                            // There won't be new tasks if we are going to shutdown
-                            if (shutdownFlag) {
-                                log.info("'{}': bye bye!", this.getName());
-                                return;
-                            }
+                        // There won't be new tasks if we are going to shutdown
+                        if (shutdownFlag) {
+                            log.info("'{}': bye bye!", this.getName());
+                            return;
+                        }
 
-                            // Wait for the new added tasks
+                        try {
+                            // Wait for the newly added tasks
                             queue.wait();
                         } catch (InterruptedException e) {
                             log.info("'{}': bye bye!", this.getName());
@@ -119,34 +119,30 @@ public class SimpleExecutor {
                         }
                     }
 
-                    // Get a task for execution
+                    // Has this thread been interrupted (e.g. by shutdownNow)?
+                    if (this.isInterrupted()) {
+                        log.info("'{}': bye bye!", this.getName());
+                        return;
+                    }
+
+                    // Claim the task and mark it as in-flight while still holding the lock,
+                    // so awaitTermination() can never see an empty queue with zero active workers
+                    // in the window between dequeue and execution.
                     task = queue.removeFirst();
-                    queue.notify();
+                    activeWorkersCounter++;
                 }
 
                 try {
-                    startWork();
                     task.run();
                 } catch (RuntimeException e) {
                     log.error("Error during task execution", e);
                 } finally {
-                    completeWork();
+                    synchronized (queue) {
+                        activeWorkersCounter--;
+                        // A worker finished: awaitTermination() may now be able to proceed.
+                        queue.notifyAll();
+                    }
                 }
-            }
-        }
-
-
-        private void startWork() {
-            synchronized (activeWorkersCounterLock) {
-                activeWorkersCounter++;
-                activeWorkersCounterLock.notify();
-            }
-        }
-
-        private void completeWork() {
-            synchronized (activeWorkersCounterLock) {
-                activeWorkersCounter--;
-                activeWorkersCounterLock.notify();
             }
         }
     }

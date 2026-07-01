@@ -1,44 +1,34 @@
-buildscript {
-    ext {
-        versions = [
-                commons_lang3: '3.9',
-                lombok       : '1.18.4',
-
-                slf4j        : '1.7.25',
-                logback      : '1.2.3',
-
-                junit        : '5.3.2',
-                assertj      : '3.11.1'
-        ]
-    }
-}
-
 plugins {
     id 'java'
 }
 
-sourceCompatibility = 1.11
-targetCompatibility = 1.11
+group = 'dev.astamur'
+version = '0.0.1'
 
-group 'dev.astamur'
-version '0.0.1'
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation "org.apache.commons:commons-lang3:$versions.commons_lang3"
-    implementation "org.slf4j:slf4j-api:$versions.slf4j"
-    implementation "ch.qos.logback:logback-classic:$versions.logback"
+    implementation libs.commons.lang3
+    implementation libs.slf4j.api
+    implementation libs.logback.classic
 
-    testImplementation "org.junit.jupiter:junit-jupiter-engine:$versions.junit"
-    testImplementation "org.assertj:assertj-core:$versions.assertj"
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+    testCompileOnly libs.lombok
+    testAnnotationProcessor libs.lombok
 
-    compileOnly "org.projectlombok:lombok:$versions.lombok"
-    testCompileOnly "org.projectlombok:lombok:$versions.lombok"
-    annotationProcessor "org.projectlombok:lombok:$versions.lombok"
-    testAnnotationProcessor "org.projectlombok:lombok:$versions.lombok"
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testImplementation libs.assertj.core
+    testRuntimeOnly libs.junit.platform.launcher
 }
 
 test {
