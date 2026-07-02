@@ -5,6 +5,7 @@ slf4j         = "2.0.17"
 logback       = "1.5.37"
 junit         = "5.14.4"
 assertj       = "3.27.3"
+awaitility    = "4.3.0"
 
 [libraries]
 commons-lang3           = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
@@ -15,3 +16,4 @@ junit-bom               = { module = "org.junit:junit-bom",             version.
 junit-jupiter           = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 assertj-core            = { module = "org.assertj:assertj-core",        version.ref = "assertj" }
+awaitility              = { module = "org.awaitility:awaitility",        version.ref = "awaitility" }
